@@ -1,0 +1,21 @@
+name: fluttercon_cbl_talk
+publish_to: 'none'
+version: 0.1.0+0
+
+environment:
+  sdk: '>=3.0.5 <4.0.0'
+
+dependencies:
+  cbl: ^2.1.9
+  cbl_flutter: ^2.0.7
+  cbl_flutter_ee: ^2.2.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
