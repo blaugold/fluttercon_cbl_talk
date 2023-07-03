@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:cbl/cbl.dart';
 import 'package:cbl_flutter/cbl_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -35,19 +35,19 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   var _messages = <Message>[];
   List<Message>? _foundMessages;
-  late StreamSubscription _messagesSubscription;
+  late final StreamSubscription _messagesSubscription;
   final _messageInputController = TextEditingController();
   final _messageInputFocusNode = FocusNode();
-  Message? _editedMessage;
+  Message? _editMessage;
 
-  bool get _isEditing => _editedMessage != null;
+  bool get _isEditing => _editMessage != null;
   bool get _isSearching => _foundMessages != null;
 
   @override
   void initState() {
+    super.initState();
     _messagesSubscription = watchMessages()
         .listen((messages) => setState(() => _messages = messages));
-    super.initState();
   }
 
   @override
@@ -84,13 +84,14 @@ class _ChatPageState extends State<ChatPage> {
         }
 
         final message = messages[index];
+
         return Padding(
           padding: const EdgeInsets.all(8),
           child: MessageTile(
             message: message,
             isFromCurrentUser: !_isSearching && message.author == currentAuthor,
             onEdit: () {
-              setState(() => _editedMessage = message);
+              setState(() => _editMessage = message);
               _messageInputController.text = message.text;
               _messageInputFocusNode.requestFocus();
             },
@@ -111,8 +112,8 @@ class _ChatPageState extends State<ChatPage> {
           labelText: 'Message',
         ),
         onFieldSubmitted: (text) {
+          final now = DateTime.now();
           if (text.isNotEmpty) {
-            final now = DateTime.now();
             if (!_isEditing) {
               saveMessage(Message(
                 text: text,
@@ -121,11 +122,8 @@ class _ChatPageState extends State<ChatPage> {
                 updatedAt: now,
               ));
             } else {
-              saveMessage(_editedMessage!.copyWith(
-                text: text,
-                updatedAt: now,
-              ));
-              setState(() => _editedMessage = null);
+              saveMessage(_editMessage!.copyWith(text: text, updatedAt: now));
+              setState(() => _editMessage = null);
             }
             _messageInputController.clear();
           }
@@ -155,7 +153,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 }
 
-late Database database;
+late final Database database;
 
 Future<void> openDatabase() async {
   database = await Database.openAsync('messages');
@@ -209,7 +207,7 @@ Future<void> saveMessage(Message message) async {
       ? MutableDocument()
       : (await database.document(message.id!))!.toMutable();
   document.updateFromEntity(message);
-  await database.saveDocument(document);
+  await database.saveDocument(document, ConcurrencyControl.failOnConflict);
 }
 
 Future<List<Message>> searchMessages(String prompt) async {
@@ -229,12 +227,7 @@ Future<List<Message>> searchMessages(String prompt) async {
       .toList();
 }
 
-String getAuthor() {
-  const authors = ['Alice', 'Bob'];
-  return authors[Random().nextInt(authors.length)];
-}
-
-final currentAuthor = getAuthor();
+final currentAuthor = defaultTargetPlatform.name;
 
 class Message {
   Message({
