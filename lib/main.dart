@@ -112,8 +112,8 @@ class _ChatPageState extends State<ChatPage> {
           labelText: 'Message',
         ),
         onFieldSubmitted: (text) {
-          final now = DateTime.now();
           if (text.isNotEmpty) {
+            final now = DateTime.now();
             if (!_isEditing) {
               saveMessage(Message(
                 text: text,
